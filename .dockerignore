@@ -1,0 +1,10 @@
+**/bin
+**/obj
+**/.vs
+**/.git
+**/.gitignore
+**/aws
+README.md
+**/*.user
+**/*.md
+.git

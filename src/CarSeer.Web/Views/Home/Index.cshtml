@@ -1,0 +1,111 @@
+@model VehicleLookupViewModel
+@{
+    ViewData["Title"] = "Vehicle lookup";
+}
+
+<h1>Vehicle lookup</h1>
+
+<form method="get" asp-controller="Home" asp-action="Index" id="lookup-form" autocomplete="off">
+    <div class="field make-field">
+        <label for="make-search">Make</label>
+        <input type="text"
+               id="make-search"
+               value="@Model.MakeName"
+               placeholder="Honda"
+               maxlength="100"
+               aria-autocomplete="list"
+               aria-controls="make-results"
+               aria-expanded="false" />
+        <input type="hidden" name="MakeId" id="make-id" value="@Model.MakeId" />
+        <input type="hidden" name="MakeName" id="make-name" value="@Model.MakeName" />
+        <ul id="make-results" class="suggestions" hidden></ul>
+    </div>
+
+    <div class="field">
+        <label for="year">Year</label>
+        <input type="number"
+               id="year"
+               name="Year"
+               min="@Model.MinYear"
+               max="@Model.MaxYear"
+               value="@Model.Year"
+               placeholder="@Model.MinYear"
+               required />
+    </div>
+
+    <button type="submit">Search</button>
+</form>
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <p class="error" role="alert">@Model.ErrorMessage</p>
+}
+
+@if (Model.HasSearched && string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <section>
+        <h2>@(string.IsNullOrWhiteSpace(Model.MakeName) ? "Selected make" : Model.MakeName) @Model.Year</h2>
+        <p>@Model.Models.Count model@(Model.Models.Count == 1 ? "" : "s"), @Model.VehicleTypes.Count type@(Model.VehicleTypes.Count == 1 ? "" : "s")</p>
+
+        <p class="filters" aria-label="Vehicle types">
+            <a class="@(string.IsNullOrWhiteSpace(Model.VehicleType) ? "active" : null)"
+               asp-controller="Home"
+               asp-action="Index"
+               asp-route-MakeId="@Model.MakeId"
+               asp-route-MakeName="@Model.MakeName"
+               asp-route-Year="@Model.Year">All types</a>
+            @foreach (var type in Model.VehicleTypes)
+            {
+                <a class="@(string.Equals(Model.VehicleType, type.Name, StringComparison.OrdinalIgnoreCase) ? "active" : null)"
+                   asp-controller="Home"
+                   asp-action="Index"
+                   asp-route-MakeId="@Model.MakeId"
+                   asp-route-MakeName="@Model.MakeName"
+                   asp-route-Year="@Model.Year"
+                   asp-route-VehicleType="@type.Name">@type.Name</a>
+            }
+        </p>
+
+        @if (Model.VehicleTypes.Count == 0)
+        {
+            <p>No vehicle types were returned for this make.</p>
+        }
+
+        @if (Model.Models.Count == 0)
+        {
+            <p>No models were found for this make, year, and type.</p>
+        }
+        else
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>Model</th>
+                        <th>ID</th>
+                        @if (Model.Models.Any(model => !string.IsNullOrWhiteSpace(model.VehicleTypeName)))
+                        {
+                            <th>Type</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var vehicle in Model.Models)
+                {
+                    <tr>
+                        <td>@vehicle.Name</td>
+                        <td>@vehicle.Id</td>
+                        @if (Model.Models.Any(item => !string.IsNullOrWhiteSpace(item.VehicleTypeName)))
+                        {
+                            <td>@(vehicle.VehicleTypeName ?? "—")</td>
+                        }
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </section>
+}
+
+@section Scripts {
+    <script src="~/js/make-search.js" asp-append-version="true"></script>
+}
